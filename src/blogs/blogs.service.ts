@@ -4,6 +4,7 @@ import { Blog, BlogStatus } from './blog.model';
 import { v4 as uuid } from 'uuid';
 import { CreateBlogDto } from './dto/create-blog.dto';
 import { GetBlogsFilterDto } from './dto/get-blogs-filter.dto';
+import { NotFoundException } from '@nestjs/common/exceptions';
 
 @Injectable()
 export class BlogsService {
@@ -39,7 +40,17 @@ export class BlogsService {
     }
 
     getBlogById (id:string):Blog {
-        return this.blogs.find( (blog)=> blog.id == id);
+
+        // try to get blog
+        const found = this.blogs.find( (blog)=> blog.id == id);
+
+        // not fonud? -> throw error
+        if(!found){
+            throw new NotFoundException('Your ID of Blog is not found !');
+        }
+
+        // else return blog 
+        return found;
     }
 
     createBlog(createBlogDto: CreateBlogDto): Blog {
@@ -60,7 +71,8 @@ export class BlogsService {
     }
 
     deleteBlog(id: string): void {
-        this.blogs = this.blogs.filter((blog) => blog.id !== id);
+        const found = this.getBlogById(id);
+        this.blogs = this.blogs.filter((blog) => blog.id !== found.id);
     }
 
     updateBlogStatus(id: string, status: BlogStatus){

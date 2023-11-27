@@ -5,6 +5,7 @@ import { Blog, BlogStatus } from './blog.model';
 import { BlogsService } from './blogs.service';
 import { CreateBlogDto } from './dto/create-blog.dto';
 import { GetBlogsFilterDto } from './dto/get-blogs-filter.dto';
+import { UpdateBlogStatusDto } from './dto/update-blog-status.dto';
 
 @Controller('blogs')
 export class BlogsController {
@@ -42,10 +43,12 @@ export class BlogsController {
   @Patch('/:id/status')
   updateBlogStatus(
     @Param('id') id: string,
-    @Body('status') status: BlogStatus,
+    @Body() updateBlogStatusDto: UpdateBlogStatusDto,
   ): Blog {
+    const { status } = updateBlogStatusDto;
     return this.blogsService.updateBlogStatus(id,status);
   }
 
+  
 
 }
