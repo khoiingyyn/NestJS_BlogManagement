@@ -4,5 +4,12 @@ export interface Blog {
     title: string;
     content: string;
     author: string;
+    status:BlogStatus;
     date: Date;
+}
+
+export enum BlogStatus {
+    PENDING = 'PENDING',
+    CONFIRMED = 'CONFIRMED',
+    POSTEĐ = 'POSTED',
 }
