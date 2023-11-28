@@ -1,83 +1,72 @@
 /* eslint-disable prettier/prettier */
-import { Injectable } from '@nestjs/common';
-import { Blog, BlogStatus } from './blog.model';
-import { v4 as uuid } from 'uuid';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { BlogStatus } from './blog-status-enum';
 import { CreateBlogDto } from './dto/create-blog.dto';
 import { GetBlogsFilterDto } from './dto/get-blogs-filter.dto';
-import { NotFoundException } from '@nestjs/common/exceptions';
-
+import { InjectRepository } from '@nestjs/typeorm';
+import { Blog } from './dto/blog.entity';
+import { Repository } from 'typeorm';
 @Injectable()
 export class BlogsService {
-    private blogs: Blog[] = [];
+    constructor(
+        @InjectRepository(Blog)
+        private blogsRepository: Repository<Blog>,
+    ) {}
+
     
-    getAllBlogs(): Blog[] {
-        return this.blogs;
-    }
+    async getBlogs(filterDto:GetBlogsFilterDto): Promise<Blog[]>{
+        const query = this.blogsRepository.createQueryBuilder('blog');
 
-    getBlogWithFilters(filterDto: GetBlogsFilterDto): Blog[] {
-        const { status, search} = filterDto;
-        //1. define 1 empty array to contain the result
-        let blogs = this.getAllBlogs();
-        //2. do with status
-        if (status){
-            blogs = blogs.filter((blogs) => blogs.status === status );
-        }
-        //3. do with search
-        if(search){
-            blogs = blogs.filter((blogs) => {
-                if (blogs.title.includes(search)
-                || blogs.content.includes(search) 
-                || blogs.author.includes(search)
-                ) {
-                return true;
-                }
-            
-            return false;
-        });
-        }
-        //4. return final result
+        const blogs = await query.getMany();
+
         return blogs;
+
     }
 
-    getBlogById (id:string):Blog {
-
-        // try to get blog
-        const found = this.blogs.find( (blog)=> blog.id == id);
-
-        // not fonud? -> throw error
+    async getBlogById(id: string): Promise<Blog> 
+    {
+        const found = await this.blogsRepository.findOne({
+            where:
+            {
+                id:id,
+            }
+        });
         if(!found){
-            throw new NotFoundException('Your ID of Blog is not found !');
+            throw new NotFoundException(`Your ID "${id}" of Blog is not found !`);
+            
         }
-
-        // else return blog 
         return found;
+
     }
 
-    createBlog(createBlogDto: CreateBlogDto): Blog {
-        const { title, content, author, date} = createBlogDto;
+        async createBlog(CreateBlogDto: CreateBlogDto): Promise<Blog> {
+        const { title, content } = CreateBlogDto;
 
-        const blog: Blog =
-        {
-            id: uuid(),
+        const blog = this.blogsRepository.create({
             title,
             content,
-            author,
-            date,
             status: BlogStatus.PENDING,
-        };
-
-        this.blogs.push(blog);
+            });
+        await this.blogsRepository.save(blog);
         return blog;
     }
 
-    deleteBlog(id: string): void {
-        const found = this.getBlogById(id);
-        this.blogs = this.blogs.filter((blog) => blog.id !== found.id);
+  
+
+        async deleteBlog(id: string): Promise<void> {
+            const result = await this.blogsRepository.delete(id);
+            
+            if(result.affected === 0) {
+                throw new NotFoundException(`The Blog with ID: "${id}" not found`)
+            }
+
     }
 
-    updateBlogStatus(id: string, status: BlogStatus){
-        const blog = this.getBlogById(id);
+    async updateBlogStatus(id: string, status: BlogStatus): Promise<Blog>{
+        const blog = await this.getBlogById(id);
+
         blog.status = status;
+        await this.blogsRepository.save(blog);
         return blog;
     }
 

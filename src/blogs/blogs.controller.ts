@@ -1,8 +1,9 @@
 /* eslint-disable prettier/prettier */
 import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
 import { Query } from '@nestjs/common/decorators';
-import { Blog, BlogStatus } from './blog.model';
+import { BlogStatus } from './blog-status-enum';
 import { BlogsService } from './blogs.service';
+import { Blog } from './dto/blog.entity';
 import { CreateBlogDto } from './dto/create-blog.dto';
 import { GetBlogsFilterDto } from './dto/get-blogs-filter.dto';
 import { UpdateBlogStatusDto } from './dto/update-blog-status.dto';
@@ -12,31 +13,30 @@ export class BlogsController {
   constructor(private blogsService: BlogsService) {}
 
   @Get()
-  getBlogs(@Query() filterDto: GetBlogsFilterDto): Blog[] {
+  getBlogs(@Query() filterDto: GetBlogsFilterDto): Promise<Blog[]> {
     //have filters defined ? call blogsService.getBlogWithFilter
     // note ? getAllBlogs
 
-    if(Object.keys(filterDto).length){
-      return this.blogsService.getBlogWithFilters(filterDto);
-
-    } else {
-    return this.blogsService.getAllBlogs();
+    return this.blogsService.getBlogs(filterDto);
     }
-  }
-
+  
+  // @Get('/:id')
+  // getBlogById(@Param('id') id: string):Blog {
+  //   return this.blogsService.getBlogById(id);
+  // }
   @Get('/:id')
-  getBlogById(@Param('id') id: string):Blog {
+    getBlogById(@Param('id') id: string): Promise<Blog> {
     return this.blogsService.getBlogById(id);
   }
 
   @Post()
   createBlog(
-    @Body() createBlogDto: CreateBlogDto): Blog {
-        return this.blogsService.createBlog(createBlogDto);
+    @Body() CreateBlogDto: CreateBlogDto): Promise<Blog> {
+        return this.blogsService.createBlog(CreateBlogDto);
     }
 
   @Delete('/:id')
-  deleteBlog(@Param('id') id: string): void{
+  deleteBlog(@Param('id') id: string): Promise<void>{
     return this.blogsService.deleteBlog(id);
   }
 
@@ -44,7 +44,7 @@ export class BlogsController {
   updateBlogStatus(
     @Param('id') id: string,
     @Body() updateBlogStatusDto: UpdateBlogStatusDto,
-  ): Blog {
+  ): Promise<Blog> {
     const { status } = updateBlogStatusDto;
     return this.blogsService.updateBlogStatus(id,status);
   }

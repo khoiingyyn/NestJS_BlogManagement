@@ -10,5 +10,6 @@ export class CreateBlogDto {
     @IsNotEmpty()
     author: string;
 
+    
     date: Date;
 }
