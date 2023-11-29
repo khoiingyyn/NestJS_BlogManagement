@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable prettier/prettier */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { BlogStatus } from './blog-status-enum';
@@ -6,6 +7,7 @@ import { GetBlogsFilterDto } from './dto/get-blogs-filter.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Blog } from './dto/blog.entity';
 import { Repository } from 'typeorm';
+import { User } from 'src/auth/user.entity';
 @Injectable()
 export class BlogsService {
     constructor(
@@ -39,13 +41,14 @@ export class BlogsService {
 
     }
 
-        async createBlog(CreateBlogDto: CreateBlogDto): Promise<Blog> {
+        async createBlog(CreateBlogDto: CreateBlogDto, user: User): Promise<Blog> {
         const { title, content } = CreateBlogDto;
 
         const blog = this.blogsRepository.create({
             title,
             content,
             status: BlogStatus.PENDING,
+            user,
             });
         await this.blogsRepository.save(blog);
         return blog;

@@ -1,6 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable prettier/prettier */
 import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
-import { Query } from '@nestjs/common/decorators';
+import { Query, UseGuards } from '@nestjs/common/decorators';
+import { AuthGuard } from '@nestjs/passport';
+import { GetUser } from 'src/auth/get-user.decorator';
+import { User } from 'src/auth/user.entity';
 import { BlogStatus } from './blog-status-enum';
 import { BlogsService } from './blogs.service';
 import { Blog } from './dto/blog.entity';
@@ -9,6 +13,7 @@ import { GetBlogsFilterDto } from './dto/get-blogs-filter.dto';
 import { UpdateBlogStatusDto } from './dto/update-blog-status.dto';
 
 @Controller('blogs')
+@UseGuards(AuthGuard())
 export class BlogsController {
   constructor(private blogsService: BlogsService) {}
 
@@ -31,8 +36,10 @@ export class BlogsController {
 
   @Post()
   createBlog(
-    @Body() CreateBlogDto: CreateBlogDto): Promise<Blog> {
-        return this.blogsService.createBlog(CreateBlogDto);
+    @Body() CreateBlogDto: CreateBlogDto,
+    @GetUser() user:User,
+    ): Promise<Blog> {
+        return this.blogsService.createBlog(CreateBlogDto, user);
     }
 
   @Delete('/:id')

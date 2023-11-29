@@ -1,5 +1,6 @@
 /* eslint-disable prettier/prettier */
-import { Column, Entity, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
+import { Blog } from "src/blogs/dto/blog.entity";
+import { Column, Entity, OneToMany, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class User {
@@ -11,4 +12,7 @@ export class User {
 
     @Column()
     password: string;
+
+    @OneToMany((_type) => Blog, blog => blog.user, {eager:true})
+    blogs: Blog[];
 }
